@@ -4,12 +4,11 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# Install all Python deps in single layer
-# Use CPU-only torch index to avoid CUDA bloat
-RUN pip install --no-cache-dir \
-    -r requirements.txt \
-    torch --index-url https://download.pytorch.org/whl/cpu \
-    sentence-transformers
+# Install CPU-only torch first (separate step to use the PyTorch index)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+# Install all remaining deps from PyPI
+RUN pip install --no-cache-dir sentence-transformers -r requirements.txt
 
 COPY . .
 
