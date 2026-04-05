@@ -12,9 +12,6 @@ RUN pip install --no-cache-dir sentence-transformers>=2.7.0
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-bake SBERT model into image (avoids cold-start timeout)
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-
 # Copy env source
 COPY . .
 
