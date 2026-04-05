@@ -303,7 +303,7 @@ canvas{width:100% !important;height:180px !important}
 
     <div class="grid">
       <div class="col-left">
-        <div class="card" id="paperCard">
+        <div class="card" id="paperCard" style="max-height: 480px; overflow-y: auto; padding-right: 10px;">
           <div id="paperContent">
             <div class="empty-state">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/></svg>
@@ -311,34 +311,41 @@ canvas{width:100% !important;height:180px !important}
             </div>
           </div>
         </div>
-        <div class="card" id="actionCard" style="display:none">
-          <div class="section-label">Agent Determination</div>
-          <div class="action-card">
-            <div class="action-header">
-              <span style="font-weight:600">Recommendation</span>
-              <span id="recPill" class="pill pill-reject">—</span>
-            </div>
-            <div id="confidenceRow" style="display:flex;justify-content:space-between;margin-bottom:10px">
-              <span style="font-size:.82rem;color:var(--text2)">Confidence</span>
-              <span id="confValue" style="font-weight:700">—</span>
-            </div>
-            <div class="section-label" style="margin-top:0">Reasoning</div>
-            <div id="reasoningText" class="section-text" style="font-style:italic">—</div>
-            <div id="flawsSection" style="display:none">
-              <div class="section-label" style="color:var(--red)">⚠ Identified Flaws</div>
-              <div id="flawsList"></div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="card" id="actionCard" style="display:none; padding:16px;">
+            <div class="section-label" style="margin-top:0">Agent Action</div>
+            <div class="action-card" style="padding:12px; margin-bottom:0; background:rgba(0,0,0,.3)">
+              <div class="action-header" style="margin-bottom:8px; padding-bottom:8px;">
+                <span style="font-weight:600; font-size:.85rem">Recommendation</span>
+                <span id="recPill" class="pill pill-reject">—</span>
+              </div>
+              <div id="confidenceRow" style="display:flex;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:.78rem;color:var(--text2)">Confidence</span>
+                <span id="confValue" style="font-weight:700;font-size:.85rem">—</span>
+              </div>
+              <div class="section-label" style="margin-top:4px; font-size:.65rem">Reasoning</div>
+              <div id="reasoningText" class="section-text" style="font-style:italic; font-size:.75rem; max-height:80px; overflow-y:auto">—</div>
+              <div id="flawsSection" style="display:none; margin-top:8px">
+                <div class="section-label" style="color:var(--red); font-size:.65rem">⚠ Flags</div>
+                <div id="flawsList" style="font-size:.75rem"></div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="card" id="rewardCard" style="display:none">
-          <div class="section-label">Reward Breakdown</div>
-          <div class="reward-grid">
-            <div class="reward-cell"><div class="label">R_flaw (recall)</div><div class="val" id="rwFlaw">—</div></div>
-            <div class="reward-cell"><div class="label">A_rec (accuracy)</div><div class="val" id="rwRec">—</div></div>
-            <div class="reward-cell"><div class="label">B_crit (bonus)</div><div class="val" id="rwCrit">—</div></div>
-            <div class="reward-cell"><div class="label">P_FP (penalty)</div><div class="val" id="rwFP">—</div></div>
-            <div class="reward-cell"><div class="label">Gate (Γ)</div><div class="val" id="rwGate">—</div></div>
-            <div class="reward-cell" style="border:1px solid var(--accent);border-radius:8px"><div class="label">R_total</div><div class="val" id="rwTotal" style="color:var(--accent2)">—</div></div>
+
+          <div class="card" id="rewardCard" style="display:none; padding:16px;">
+            <div class="section-label" style="margin-top:0">Env Reward Breakdown</div>
+            <div class="reward-grid" style="gap:6px; margin-top:4px;">
+              <div class="reward-cell" style="padding:6px 8px"><div class="label">R_flaw (recall)</div><div class="val" style="font-size:1rem" id="rwFlaw">—</div></div>
+              <div class="reward-cell" style="padding:6px 8px"><div class="label">A_rec (accuracy)</div><div class="val" style="font-size:1rem" id="rwRec">—</div></div>
+              <div class="reward-cell" style="padding:6px 8px"><div class="label">B_crit (bonus)</div><div class="val" style="font-size:1rem" id="rwCrit">—</div></div>
+              <div class="reward-cell" style="padding:6px 8px"><div class="label">P_FP (penalty)</div><div class="val" style="font-size:1rem" id="rwFP">—</div></div>
+              <div class="reward-cell" style="padding:6px 8px"><div class="label">Gate (Γ)</div><div class="val" style="font-size:1rem" id="rwGate">—</div></div>
+              <div class="reward-cell" style="border:1px solid var(--accent);border-radius:8px;padding:6px 8px"><div class="label">R_total</div><div class="val" style="color:var(--accent2);font-size:1.15rem" id="rwTotal">—</div></div>
+            </div>
+            <p style="font-size:.68rem; color:var(--text2); margin-top:10px; line-height:1.4;">
+              * Mathematical reward compares agent output against the environment's ground truth for this demo paper.
+            </p>
           </div>
         </div>
       </div>

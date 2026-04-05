@@ -94,27 +94,20 @@ You MUST respond with valid JSON ONLY — no preamble, no markdown, no explanati
 
 JSON schema:
 {
-  "recommendation": "<accept|minor_revision|major_revision|reject>",
-  "identified_flaws": ["<specific flaw description>", ...],
-  "confidence": <float 0.0-1.0>,
-  "reasoning": "<detailed chain-of-thought explanation>",
-  "summary": "<2-3 sentence summary of the paper>",
-  "strengths": ["<strength 1>", "<strength 2>", ...],
-  "weaknesses": ["<weakness 1>", "<weakness 2>", ...]
+    "recommendation": "<accept|minor_revision|major_revision|reject>",
+    "identified_flaws": ["<EXACT flaw name from the list below if found>", ...],
+    "confidence": <float 0.0-1.0>,
+    ...
 }
 
-Common flaws to check:
-1. P-hacking / selective reporting (post-hoc threshold adjustments, cherry-picked seeds/metrics)
-2. No cross-validation / evaluation on training data
-3. Overclaimed results (abstract claims far exceed evidence in results)
-4. Fabricated or unverifiable citations
-5. Impossible statistics (GRIM test failures, implausible effect sizes, p-values)
-6. Missing baselines or unfair comparisons
-7. Methodological issues (wrong statistical tests, confounding variables)
-8. Reproducibility concerns (missing hyperparameters, dataset details)
+Common flaws to check (YOU MUST USE THESE EXACT STRINGS in identified_flaws array):
+- "p_hacking" (selective reporting, post-hoc threshold adjustments)
+- "no_cross_validation" (evaluation on training data)
+- "overclaimed_results" (abstract claims far exceed evidence)
+- "fabricated_citation" (unverifiable or hallucinated citations)
+- "impossible_statistics" (GRIM test failures, implausible p-values)
 
-Be precise. Name the exact location of each flaw if possible.
-Empty identified_flaws list if the paper is methodologically sound."""
+Be precise. Empty identified_flaws list if the paper is methodologically sound."""
 
 
 def _extract_pdf_text(file_bytes: bytes) -> str:
