@@ -73,12 +73,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .fill-amber{background:linear-gradient(90deg,var(--amber),#fbbf24)}
 .fill-red{background:linear-gradient(90deg,var(--red),#f87171)}
 
-.col-left{display:flex;flex-direction:column;gap:20px;max-height:calc(100vh - 240px);overflow-y:auto}
-.col-left::-webkit-scrollbar{width:4px}
-.col-left::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
-.col-right{display:flex;flex-direction:column;gap:20px;max-height:calc(100vh - 240px);overflow-y:auto}
-.col-right::-webkit-scrollbar{width:4px}
-.col-right::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.col-left{display:flex;flex-direction:column;gap:20px;}
+.col-right{display:flex;flex-direction:column;gap:20px;}
 
 .paper-title{font-size:1.15rem;font-weight:700;line-height:1.4;margin-bottom:8px}
 .paper-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
@@ -781,10 +777,33 @@ function runOneEpisode(task) {
             currentPaper = obs.paper || {};
             renderPaper(currentPaper);
             addFeedItem('START', `📄 Reviewing: ${currentPaper.title || 'Unknown'}`);
-            const action = { recommendation:'reject', identified_flaws:[], confidence:0.5, reasoning:'Dashboard baseline: conservative reject.' };
-            renderAction(action);
-            phase = 'step';
-            ws.send(JSON.stringify({ type:'step', data:action }));
+            
+            const p = currentPaper;
+            const fullText = (p.title + "\\n" + p.abstract + "\\n" + p.methodology + "\\n" + p.results + "\\n" + p.conclusions).trim();
+            
+            addFeedItem('START', `⏳ Generating real AI review...`);
+            fetch('/api/review-text', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: fullText })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const rev = data.review || {};
+                const action = { 
+                    recommendation: rev.recommendation || 'reject', 
+                    identified_flaws: rev.identified_flaws || [], 
+                    confidence: rev.confidence || 0.8, 
+                    reasoning: rev.reasoning || rev.summary || 'AI Review completed.' 
+                };
+                renderAction(action);
+                phase = 'step';
+                ws.send(JSON.stringify({ type:'step', data:action }));
+            })
+            .catch(err => {
+                addFeedItem('END', `❌ API failed: ${err.message}`);
+                ws.close();
+            });
           } else if (phase === 'step') {
             const r = reward ?? 0;
             const meta = obs.metadata || {};
