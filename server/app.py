@@ -51,6 +51,7 @@ def _load_ui_html() -> str:
     return _UI_HTML
 
 
+@app.get("/", response_class=HTMLResponse)
 @app.get("/ui", response_class=HTMLResponse)
 async def dashboard_ui():
     """Serve the live RL dashboard."""
