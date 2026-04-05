@@ -182,7 +182,7 @@ def _call_llm(paper_text: str) -> dict:
     """Call LLM to review the paper text via HuggingFace Inference API."""
     from huggingface_hub import InferenceClient
 
-    model = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-1.5B-Instruct")
+    model = os.environ.get("MODEL_NAME", "HuggingFaceH4/zephyr-7b-beta")
     token = os.environ.get("HF_TOKEN", "")
 
     if not token:

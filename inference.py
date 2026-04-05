@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 # Config from environment (MANDATORY per competition rules)
 # ---------------------------------------------------------------------------
 API_BASE_URL = os.environ.get("API_BASE_URL", "https://api-inference.huggingface.co/v1")
-MODEL_NAME = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-1.5B-Instruct")
+MODEL_NAME = os.environ.get("MODEL_NAME", "HuggingFaceH4/zephyr-7b-beta")
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 ENV_BASE_URL = os.environ.get("ENV_BASE_URL", "http://localhost:7860")
 
