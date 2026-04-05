@@ -179,48 +179,38 @@ def _extract_sections(full_text: str) -> dict:
 
 
 def _call_llm(paper_text: str) -> dict:
-    """Call LLM to review the paper text via HuggingFace Inference API."""
-    from huggingface_hub import InferenceClient
+    """Call LLM to review the paper text using ultra-stable Gemini 2.5 backend."""
+    import requests
+    
+    # Use user provided Gemini key for the unbreakable UI demo
+    api_key = os.environ.get("GEMINI_API_KEY", "AIzaSyDT9SOFYH-mGxk6SyajscIf5crZXKbRDew")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
 
-    model = os.environ.get("MODEL_NAME", "HuggingFaceH4/zephyr-7b-beta")
-    token = os.environ.get("HF_TOKEN", "")
+    # Truncate to ~30,000 chars for context window (Gemini handles 1M+ but let's keep it safe)
+    truncated = paper_text[:30000]
 
-    if not token:
-        return {
-            "recommendation": "major_revision",
-            "identified_flaws": [],
-            "confidence": 0.0,
-            "reasoning": "No API token configured. Set HF_TOKEN environment variable.",
-            "summary": "Unable to review — no API key.",
-            "strengths": [],
-            "weaknesses": ["Review not possible without API access."],
-        }
-
-    client = InferenceClient(token=token)
-
-    # Truncate to ~6000 chars for context window
-    truncated = paper_text[:6000]
+    system_instruction = {"parts": [{"text": REVIEW_SYSTEM_PROMPT}]}
+    contents = [{"role": "user", "parts": [{"text": f"Please review this paper:\n\n{truncated}"}]}]
+    
+    # Enforce JSON output mode
+    generation_config = {"response_mime_type": "application/json"}
 
     try:
-        response = client.chat_completion(
-            model=model,
-            messages=[
-                {"role": "system", "content": REVIEW_SYSTEM_PROMPT},
-                {"role": "user", "content": f"Please review this paper:\n\n{truncated}"},
-            ],
-            max_tokens=2048,
-            temperature=0.3,
-        )
-        raw = response.choices[0].message.content.strip()
-        # Strip markdown fences
-        if raw.startswith("```"):
-            parts = raw.split("```")
-            if len(parts) >= 2:
-                raw = parts[1]
-                if raw.startswith("json"):
-                    raw = raw[4:]
-            raw = raw.strip()
+        payload = {
+            "system_instruction": system_instruction,
+            "contents": contents,
+            "generationConfig": generation_config
+        }
+        
+        r = requests.post(url, json=payload, timeout=60)
+        r.raise_for_status()
+        
+        data = r.json()
+        raw = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        
+        # Parse Gemini's JSON
         return json.loads(raw)
+        
     except json.JSONDecodeError:
         return {
             "recommendation": "major_revision",
@@ -229,17 +219,17 @@ def _call_llm(paper_text: str) -> dict:
             "reasoning": f"LLM returned invalid JSON. Raw response: {raw[:500]}",
             "summary": "Parse error during review.",
             "strengths": [],
-            "weaknesses": ["Could not parse LLM output."],
+            "weaknesses": ["Could not parse LLM output."]
         }
     except Exception as exc:
         return {
             "recommendation": "major_revision",
             "identified_flaws": [],
             "confidence": 0.0,
-            "reasoning": f"API error: {exc}",
+            "reasoning": f"Gemini API error: {exc}",
             "summary": "API call failed.",
             "strengths": [],
-            "weaknesses": [str(exc)],
+            "weaknesses": [str(exc)]
         }
 
 
