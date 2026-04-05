@@ -1,0 +1,7 @@
+spec_version: 1
+name: peer_review_env
+description: "RL environment for automated scientific peer review — agent detects p-hacking, fabricated citations, impossible statistics, and more in synthetic ML papers."
+type: gym
+runtime: docker
+app: server.app:app
+port: 7860

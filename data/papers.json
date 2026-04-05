@@ -1,0 +1,230 @@
+[
+  {
+    "paper_id": "RL_STUB_001",
+    "title": "Selective Seed Reporting in Proximal Policy Optimization for Atari Benchmarks",
+    "abstract": "We present a refined PPO variant that achieves superior performance on the Atari 2600 benchmark suite. By introducing an adaptive entropy coefficient, our method demonstrates consistently higher human-normalized scores across 10 games compared to the standard implementation. Experiments across multiple seeds confirm the reliability and robustness of our improvements.",
+    "methodology": "We implemented an adaptive entropy schedule for PPO, annealing the coefficient from 0.02 to 0.001 over 5M frames. Networks follow the standard Nature-DQN architecture. We executed 20 random seeds for each of the 10 games. For the final results table, we discarded the bottom 8 seeds per game and averaged the top 12, selecting only those exceeding a pre-specified performance threshold we iteratively adjusted until p < 0.05 was achieved against the baseline.",
+    "results": "Game | PPO Baseline | Ours\nPong | 20.1 | 20.9\nBreakout | 380.2 | 450.1\nBeamRider | 6500.4 | 8900.2",
+    "conclusions": "Our adaptive entropy scheduling yields significant improvements across all tested Atari environments. The consistent performance gains validate the effectiveness of dynamic entropy annealing for stable policy learning in discrete action spaces.",
+    "citations": ["Schulman et al. 2017 PPO", "Mnih et al. 2015 DQN", "Bellemare et al. 2013 ALE", "Henderson et al. 2018 DRL reproducibility", "Engstrom et al. 2019 Implementation matters"],
+    "flaw_type": "p_hacking",
+    "flaw_location": "methodology",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "Selective seed reporting: only top-performing seeds were averaged while poor-performing seeds were discarded",
+      "P-hacking: iterative adjustment of performance threshold until statistical significance was achieved post-hoc"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_002",
+    "title": "Curriculum-Driven Soft Actor-Critic for Multi-Goal Robotic Manipulation",
+    "abstract": "Multi-goal reinforcement learning requires agents to master diverse objectives. We introduce CD-SAC, which sculpts goal sampling based on agent competence. CD-SAC converges up to three times faster than standard SAC+HER on the Fetch robotic manipulation suite.",
+    "methodology": "CD-SAC uses competence-based goal prioritization. We sought p < 0.05 against the baseline. Initial 5-seed tests yielded p=0.12. We iteratively modified the goal initialization distributions and increased specific target subsets until a configuration yielded p=0.04. This configuration was locked in for all reported metrics.",
+    "results": "Task | SAC+HER | CD-SAC\nFetchReach | 85.4% | 98.2%\nFetchPush | 62.1% | 89.5%\nFetchSlide | 21.0% | 45.3%",
+    "conclusions": "CD-SAC provides a robust framework for automated curriculum generation. The statistically significant improvements confirm its viability as a new standard for multi-task robotics.",
+    "citations": ["Andrychowicz et al. 2017 HER", "Haarnoja et al. 2018 SAC", "Florensa et al. 2017 Curriculum", "Plappert et al. 2018 Multi-goal", "Nair et al. 2018 Overcoming"],
+    "flaw_type": "p_hacking",
+    "flaw_location": "methodology",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "P-hacking through iterative environment modification: configurations were altered post-hoc until significance threshold was breached",
+      "HARKing: the hypothesis was effectively reverse-engineered from whichever configuration yielded p < 0.05"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_003",
+    "title": "Temporal-Difference Regularization for Enhanced Q-Learning Stability",
+    "abstract": "DQN suffers from overestimation bias. We propose TDR, a regularization term penalizing excessive TD-error shifts. TDR-DQN outperforms Double DQN and Dueling DQN across 10 Atari games including Montezuma's Revenge.",
+    "methodology": "TDR modifies DQN loss with an L2 term targeting TD-error variance. We monitored 20 seeds per game. For the final results table, we applied selective early stopping: each seed's training was halted at the epoch of its absolute peak evaluation score. These peak scores were then averaged to produce reported metrics.",
+    "results": "Game | Double DQN | Dueling DQN | TDR-DQN\nPong | 20.1 | 20.5 | 21.0\nBreakout | 340.5 | 380.2 | 450.6\nSpaceInvaders | 1500.4 | 1850.3 | 2400.1",
+    "conclusions": "TDR-DQN effectively stabilizes Q-value training. Remarkable performance confirms the algorithm's capacity for sustained exploration in sparse reward settings.",
+    "citations": ["Van Hasselt et al. 2016 Double DQN", "Wang et al. 2016 Dueling", "Mnih et al. 2015 DQN", "Hessel et al. 2018 Rainbow", "Fortunato et al. 2018 Noisy"],
+    "flaw_type": "p_hacking",
+    "flaw_location": "methodology",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "Selective early stopping: reporting peak scores per seed rather than final converged performance artificially inflates results",
+      "Inappropriate averaging of cherry-picked checkpoints misrepresents true asymptotic algorithm performance"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_004",
+    "title": "Graph Neural Networks for Generalized Route Planning in Gridworlds",
+    "abstract": "We present GNN-RL for route planning in dynamic grid environments. The agent perceives the environment as a graph. Our GNN-RL agent achieves 99% success rate, significantly outperforming tabular Q-learning and CNN baselines in path optimality and inference time.",
+    "methodology": "The environment is a single fixed 50x50 grid with fixed obstacles and goal position. The agent was trained on this topology with starting positions localized to the bottom-left quadrant. Evaluation was performed over 100 episodes using the exact same 50x50 grid and same starting quadrants used during training. We report final success rate and path length optimality.",
+    "results": "Model | Success Rate | Path Optimality | Inference Time\nTabular Q | 45% | 0.65 | 0.01ms\nCNN-PPO | 78% | 0.82 | 1.2ms\nGNN-RL (Ours) | 99% | 0.98 | 2.5ms",
+    "conclusions": "GNN-RL achieves near-perfect path optimality. The 99% success rate demonstrates the algorithm's unmatched ability to generalize across spatial planning problems.",
+    "citations": ["Kipf & Welling 2017 GCN", "Battaglia et al. 2018 GNN", "Schulman et al. 2017 PPO", "Hart et al. 1968 A*", "Mirowski et al. 2017 Navigation"],
+    "flaw_type": "no_cross_validation",
+    "flaw_location": "methodology and abstract",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "No cross-validation: evaluation performed on identical environment configuration used during training, equivalent to testing on training data",
+      "Overclaimed generalization: abstract claims generalizability but agent was never tested on unseen grid configurations"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_005",
+    "title": "Decentralized Multi-Agent Cooperation via Shared Latent Intentions",
+    "abstract": "We introduce SLI for implicit multi-agent coordination without communication. SLI outstrips QMIX and MAPPO by 15% in win rates across all SMAC maps. Agents organically discover complex tactics through decentralized execution.",
+    "methodology": "SLI augments MAPPO with a latent prediction head for neighbor action modeling. Training on 3m, 8m, and 2s3z SMAC maps for 20M timesteps against standard difficulty AI. Evaluation: 1000 test episodes executed against the exact same scripted enemy difficulty and identical spawn locations present during the entire training sequence.",
+    "results": "Map | QMIX | MAPPO | SLI\n3m | 92% | 94% | 100%\n8m | 85% | 88% | 98%\n2s3z | 70% | 75% | 92%",
+    "conclusions": "SLI resolves the implicit coordination bottleneck. Unprecedented win rates highlight the power of predictive regularization for decentralized execution suitable for real-world deployment.",
+    "citations": ["Rashid et al. 2018 QMIX", "Yu et al. 2021 MAPPO", "Samvelyan et al. 2019 SMAC", "Lowe et al. 2017 MADDPG", "Foerster et al. 2018 DIAL"],
+    "flaw_type": "no_cross_validation",
+    "flaw_location": "methodology",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "No cross-validation across environments: testing on identical spawn locations and enemy configurations used in training constitutes environmental overfitting",
+      "Generalization claims unsupported: real-world deployment claims cannot be validated without holdout environment configurations"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_006",
+    "title": "Universal Continuous Control via Meta-Heuristic Policy Search",
+    "abstract": "We propose MHPS, a framework that dynamically adjusts entropy and learning rates via meta-gradient optimization. MHPS comprehensively solves all continuous control environments, demonstrating perfect zero-shot transfer capabilities and robust locomotion behaviors that dwarf existing baselines.",
+    "methodology": "MHPS uses an LSTM meta-optimizer observing TD-error rates to output updated SAC hyperparameters. While the framework is designed for the entire DeepMind Control Suite, we benchmarked exclusively on Cartpole-Swingup to validate our theories. Training: 1M steps, 5 seeds. Final metrics calculated by averaging asymptotic performance on this single environment.",
+    "results": "Environment | DDPG | SAC | MHPS\nCartpole-Swingup | 650.4 | 820.1 | 845.6",
+    "conclusions": "MHPS represents a monumental leap forward for reinforcement learning. Its absolute superiority provides a definitive solution for all robotic locomotion and manipulation tasks.",
+    "citations": ["Tassa et al. 2018 DMControl", "Finn et al. 2017 MAML", "Haarnoja et al. 2018 SAC", "Lillicrap et al. 2016 DDPG", "Schmidhuber 1987 Meta-learning"],
+    "flaw_type": "overclaimed_results",
+    "flaw_location": "abstract and conclusions vs. methodology and results",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "Overclaimed results: abstract claims universal solution and zero-shot transfer but results cover only a single environment (Cartpole-Swingup)",
+      "Conclusions exceed scope of evidence: claims of solving all continuous control tasks unsupported by single-environment data"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_007",
+    "title": "Zero-Shot Generalization in Visual RL via Extreme Domain Randomization",
+    "abstract": "We propose EDR, an augmentation pipeline that endows agents with unprecedented zero-shot generalization, entirely eliminating the sim-to-real gap. Evaluated on visual manipulation benchmarks with absolute zero-shot robustness.",
+    "methodology": "EDR applies color jitter, random convolutions, and Cutout patches at each observation. Agent trained on Walker-Walk with pixel observations for 500k frames. To validate zero-shot generalization claims, evaluation consisted of 100 episodes using the exact same default visual parameters and standard textures used during training.",
+    "results": "Algorithm | Evaluation Return (Standard Textures)\nBaseline DrQ | 890.5\nEDR (Ours) | 915.2",
+    "conclusions": "Extreme Domain Randomization fundamentally solves visual overfitting. The agent demonstrates impeccable ability to generalize, confirming zero-shot transfer to unseen domains.",
+    "citations": ["Kostrikov et al. 2020 DrQ", "Laskin et al. 2020 CURL", "Tobin et al. 2017 Domain Rand", "Zhang et al. 2018 Dissection", "Lee et al. 2020 SGQN"],
+    "flaw_type": "overclaimed_results",
+    "flaw_location": "abstract and methodology",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "Zero-shot generalization claims contradicted by methodology: evaluation was performed on identical visual parameters used during training, never testing on unseen domains",
+      "Lack of evidence to support conclusions: marginal performance gain on standard textures cannot support claims of eliminating the sim-to-real gap"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_008",
+    "title": "Quantum-Inspired Entropy Maximization for Exploratory Reinforcement Learning",
+    "abstract": "Inspired by quantum superposition, we propose QIEM, a complex-valued actor-critic maintaining a probabilistic superposition of policies. QIEM achieves superior sample efficiency and consistently bypasses exploratory pitfalls that trap standard SAC models.",
+    "methodology": "QIEM replaces Gaussian policy with complex-valued outputs computed via Born rule probability. Entropy maximization uses quantum von Neumann entropy. The foundational mathematics relies heavily on groundbreaking formulations by previous interdisciplinary works connecting quantum mechanics to deep learning optimization trajectories, as established definitively in the prior literature.",
+    "results": "Environment | SAC Baseline | QIEM\nPendulum-v1 | -150.4 | -120.2\nLunarLander | 240.1 | 285.5\nBipedalWalker | 290.3 | 315.8",
+    "conclusions": "QIEM successfully translates quantum mechanics into a functional RL framework. Phase interference mechanisms prevent premature convergence to local optima.",
+    "citations": ["Haarnoja et al. 2018 SAC", "Chen & Li 2023 Quantum-RL Foundations arXiv:2312.99821 [Fabricated]", "Park et al. 2024 Complex Policy Gradients NeurIPS 2024 [Fabricated]", "Watkins 1989 Q-learning", "Brockman et al. 2016 OpenAI Gym"],
+    "flaw_type": "fabricated_citation",
+    "flaw_location": "citations",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "Fabricated citations: references to 'Chen & Li 2023 Quantum-RL Foundations arXiv:2312.99821' and 'Park et al. 2024 Complex Policy Gradients NeurIPS 2024' do not exist",
+      "Methodology relies on non-existent prior work to justify core mathematical foundations"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_009",
+    "title": "Neuro-Symbolic Reward Shaping for Autonomous Navigation via LTL",
+    "abstract": "We present NSRS, a framework synthesizing dense intrinsic rewards from LTL constraints. NSRS agents achieve 100% success rate on hardest Minigrid configurations, drastically outperforming pure RL baselines.",
+    "methodology": "NSRS translates LTL formulas into deterministic finite automata. The robustness of our LTL-to-differentiable-surface mapping is deeply inspired by the recent breakthroughs in temporal logic embeddings presented at major machine learning conferences last year, which definitively solved the non-differentiability bottleneck in symbolic deep learning systems. We train PPO agents for 10M frames.",
+    "results": "Environment | PPO | PPO+Shaping | NSRS\nMinigrid-DoorKey | 0% | 85% | 100%\nMinigrid-Obstructed | 0% | 62% | 98%\nMinigrid-MultiRoom | 0% | 45% | 100%",
+    "conclusions": "NSRS represents a paradigm shift in agent instruction. We foresee NSRS becoming the standard methodology for safe AI alignment.",
+    "citations": ["Camacho et al. 2019 LTL2Reward", "Schulman et al. 2017 PPO", "Chevalier-Boisvert et al. 2018 Minigrid", "Hasanbeig et al. 2024 LTL Differentiable Embeddings ICML 2024 [Fabricated]", "De Giacomo et al. 2019 LTL"],
+    "flaw_type": "fabricated_citation",
+    "flaw_location": "citations",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "Fabricated citation: 'Hasanbeig et al. 2024 LTL Differentiable Embeddings ICML 2024' does not exist",
+      "Core theoretical claims rely on a non-existent foundational reference that cannot be verified or reproduced"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_010",
+    "title": "Asymmetric Value Functions for Multi-Joint Humanoid Locomotion Control",
+    "abstract": "We introduce AVF, decoupling value estimation for flexor and extensor actions. Statistical analysis demonstrates an unprecedented effect size. Our architecture yields policies transformative for real-world robotics, achieving bipedal locomotion mimicking biological gait.",
+    "methodology": "The AVF critic is bifurcated into two parallel streams merging at Q-value aggregation. Trained on custom Humanoid-v3 in MuJoCo for 2M steps. We ran exactly N=4 independent random seeds per algorithm. We calculated independent two-sample t-test and Cohen's d on the final episodic returns of these 4 runs.",
+    "results": "Metric | Baseline DDPG (N=4) | AVF-DDPG (N=4)\nMean Episodic Return | 2100.5 | 5800.2\nStandard Deviation | 150.2 | 120.5\np-value | - | p < 0.0001\nCohen's d effect size | - | 27.2",
+    "conclusions": "The massive statistical significance and staggering Cohen's d effect size explicitly confirm the absolute superiority of the AVF methodology.",
+    "citations": ["Lillicrap et al. 2016 DDPG", "Todorov et al. 2012 MuJoCo", "Cohen 1988 Statistical Power", "Fujimoto et al. 2018 TD3", "Silver et al. 2014 DPG"],
+    "flaw_type": "impossible_statistics",
+    "flaw_location": "results",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "Impossible Cohen's d statistic: d=27.2 is mathematically impossible in a stochastic RL environment with N=4 samples, indicating data fabrication or severe methodological error",
+      "Anomalous effect size: Cohen's d exceeding 3.0 in noisy continuous control tasks with minimal sample size is a definitive indicator of data manipulation"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_011",
+    "title": "Discrete Action Smoothing for Navigation in High-Fidelity Simulations",
+    "abstract": "We propose DAS, an algorithmic filter preventing rapid action oscillation. DAS significantly reduces physical collisions in Habitat indoor navigation, producing trajectories that are visibly smoother and safer for robotic deployment.",
+    "methodology": "DAS blends actor logits with previous step logits using exponential decay weight 0.8. Evaluated over exactly N=20 distinct episodes. Because safety is the primary concern, the critical metric was the total integer count of collisions per episode. We calculated the mean collision rate across all 20 episodes.",
+    "results": "Agent | Mean Collisions per Episode (N=20)\nBaseline A2C | 14.85\nDAS-A2C (Ours) | 3.48",
+    "conclusions": "DAS offers an elegant solution to erratic control. The massive reduction in collision rates confirms DAS makes discrete RL viable for sensitive real-world robotic tasks.",
+    "citations": ["Mnih et al. 2016 A3C", "Savva et al. 2019 Habitat", "Chaplot et al. 2020 Learning", "Anderson et al. 2018 R2R", "Wijmans et al. 2020 DD-PPO"],
+    "flaw_type": "impossible_statistics",
+    "flaw_location": "results",
+    "ground_truth_review": "reject",
+    "correct_flaws_list": [
+      "GRIM test failure: with N=20 episodes measuring integer collision counts, valid means must be multiples of 1/20 (0.05). A reported mean of 3.48 is mathematically impossible",
+      "Impossible statistic indicates data recording error, computational bug, or potential fabrication in the results"
+    ]
+  },
+  {
+    "paper_id": "RL_STUB_012",
+    "title": "Empirical Analysis of Layer Normalization in Deep Q-Networks",
+    "abstract": "We conduct a rigorous ablation study on LayerNorm within DQN across 15 ALE environments with 10 independent seeds per game. Results indicate LayerNorm reduces Q-value variance but does not universally improve asymptotic performance. We provide analysis of environments where normalization helps versus hinders exploration.",
+    "methodology": "Standard Nature-DQN with LayerNorm applied after linear layers, not convolutional layers. 10M frames per game, 10 independent seeds both for baseline and LayerNorm. We report Interquartile Mean (IQM) and 95% stratified bootstrap confidence intervals as recommended by recent RL evaluation guidelines. Evaluation conducted on holdout set of 100 episodes distinct from training trajectories.",
+    "results": "Environment | Baseline IQM | LayerNorm IQM | 95% CI Overlap\nPong | 20.5 | 20.8 | Yes\nBreakout | 312.4 | 354.1 | No (LN Better)\nAsterix | 1850.5 | 1920.0 | Yes\nSeaquest | 2100.3 | 1650.8 | No (LN Worse)",
+    "conclusions": "LayerNorm is not a universal panacea for off-policy RL. Impact is highly environment-dependent. Future research should focus on adaptive normalization schemes.",
+    "citations": ["Mnih et al. 2015 DQN", "Ba et al. 2016 LayerNorm", "Agarwal et al. 2021 Statistical Precipice", "Bellemare et al. 2013 ALE", "Bjorck et al. 2021 Normalization"],
+    "flaw_type": "correct_paper_no_flaw",
+    "flaw_location": "none",
+    "ground_truth_review": "accept",
+    "correct_flaws_list": []
+  },
+  {
+    "paper_id": "RL_STUB_013",
+    "title": "Benchmarking Offline RL on Highly Stochastic Medical Datasets",
+    "abstract": "Offline RL promises optimal policies from static datasets. We introduce Med-Stoch, a benchmark of simulated ICU patient trajectories. We evaluate CQL and IQL, finding that a regularized behavior cloning baseline surprisingly outperforms complex offline RL methods in this stochastic domain.",
+    "methodology": "Med-Stoch generated via validated PK-PD simulator modeling sepsis progression, 50,000 trajectories with sub-optimal behavioral policy. Hyperparameters tuned via 5-fold cross-validation on 20% holdout. Evaluation uses Fitted Q-Evaluation and Off-Policy Evaluation via importance sampling. 10 random seeds. All code, dataset scripts, and Docker environments open-sourced in supplementary material.",
+    "results": "Algorithm | OPE Estimated Return | 95% CI\nCQL | 42.1 | [35.2, 49.0]\nIQL | 48.5 | [40.1, 56.9]\nReg-BC | 55.2 | [51.5, 58.9]",
+    "conclusions": "Med-Stoch exposes critical vulnerabilities in offline RL when applied to stochastic environments. Future development must prioritize robustness to stochastic dynamics for healthcare deployment.",
+    "citations": ["Kumar et al. 2020 CQL", "Kostrikov et al. 2021 IQL", "Pomerleau 1991 BC", "Gottesman et al. 2019 RL Healthcare", "Raghu et al. 2017 Sepsis"],
+    "flaw_type": "correct_paper_no_flaw",
+    "flaw_location": "none",
+    "ground_truth_review": "accept",
+    "correct_flaws_list": []
+  },
+  {
+    "paper_id": "RL_STUB_014",
+    "title": "Sample Complexity of Curiosity-Driven Exploration in Sparse Reward Mazes",
+    "abstract": "We analyze the sample efficiency of ICM against baselines in procedurally generated sparse-reward grid mazes. While ICM reliably locates goals where baselines fail, its sample complexity scales exponentially with state space size. We present an analytical bound validated empirically.",
+    "methodology": "PPO augmented with ICM. Forward and inverse dynamics as 2-layer MLPs. Procedurally generated GridWorlds of sizes 10x10 to 40x40, with zero extrinsic reward except +1 at goal. Measured Steps to First Goal. 50 independent trials per maze size. Reported median and IQR. Statistical comparisons via non-parametric Mann-Whitney U test.",
+    "results": "Maze Size | Epsilon-Greedy | ICM Median | ICM IQR\n10x10 | 45000 | 12500 | [8k, 18k]\n20x20 | DNF (>1M) | 85000 | [65k, 110k]\n30x30 | DNF (>1M) | 350000 | [280k, 420k]\n40x40 | DNF (>1M) | 1200000 | [950k, 1.5M]",
+    "conclusions": "ICM clearly surpasses standard exploration but exponential scaling reveals fundamental limitations. Intrinsic motivation must be paired with hierarchical goal-setting for real-world scaling.",
+    "citations": ["Pathak et al. 2017 ICM", "Schulman et al. 2017 PPO", "Osband et al. 2016 Deep Exploration", "Bellemare et al. 2016 Count-Based", "Schmidhuber 1991 Curiosity"],
+    "flaw_type": "correct_paper_no_flaw",
+    "flaw_location": "none",
+    "ground_truth_review": "accept",
+    "correct_flaws_list": []
+  },
+  {
+    "paper_id": "RL_STUB_015",
+    "title": "Robustness of Safe RL Algorithms to Sensor Noise",
+    "abstract": "Safe RL algorithms assume perfect state observation. We evaluate CPO and PPO-Lagrangian under varying Gaussian sensor noise using Safety Gym. Even minor noise causes constraint violations to spike by 400% despite maintained reward performance, revealing a catastrophic failure mode.",
+    "methodology": "CPO and PPO-Lagrangian benchmarked on SafetyGym PointGoal1 and CarGoal1. Trained with perfect observations for 10M steps, weights frozen. Evaluation: systematic Gaussian noise injection (std 0.0 to 0.1). 100 episodes per noise level, 10 initialization seeds (1000 episodes total per noise level). Reported Average Episodic Return and Average Cost Rate.",
+    "results": "Noise Std | CPO Return | CPO Cost Rate | PPO-Lag Return | PPO-Lag Cost Rate\n0.00 | 18.5 | 21.2 | 19.1 | 23.5\n0.02 | 17.8 | 45.6 | 18.5 | 51.2\n0.05 | 15.2 | 88.4 | 16.0 | 95.8\n0.10 | 10.1 | 150.2 | 11.2 | 165.4",
+    "conclusions": "Current safe RL algorithms are highly brittle to observational noise. Safety guarantees collapse entirely even with minor noise. Future work must incorporate robust filtering or noise-aware training.",
+    "citations": ["Achiam et al. 2017 CPO", "Ray et al. 2019 SafetyGym", "Lagrangian Methods RL", "Altman 1999 CMDP", "Garcia & Fernandez 2015 Safe RL Survey"],
+    "flaw_type": "correct_paper_no_flaw",
+    "flaw_location": "none",
+    "ground_truth_review": "accept",
+    "correct_flaws_list": []
+  }
+]

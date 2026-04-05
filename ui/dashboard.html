@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peer Review RL Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--bg2:#111827;--glass:rgba(17,25,40,.72);--border:rgba(255,255,255,.08);
+  --text:#f1f5f9;--text2:#94a3b8;--accent:#6366f1;--accent2:#818cf8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--cyan:#06b6d4;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.mesh{position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(ellipse at 20% 0%,rgba(99,102,241,.12) 0%,transparent 50%),
+  radial-gradient(ellipse at 80% 100%,rgba(6,182,212,.08) 0%,transparent 50%),
+  radial-gradient(ellipse at 50% 50%,rgba(139,92,246,.06) 0%,transparent 60%);
+  animation:pulse 20s ease-in-out infinite alternate}
+@keyframes pulse{0%{opacity:.8}100%{opacity:1;transform:scale(1.02)}}
+
+.container{max-width:1440px;margin:0 auto;padding:20px 24px}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;
+  background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--border);
+  border-radius:16px;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.header h1{font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.header h1 span{color:var(--accent2)}
+.badge{font-size:.7rem;padding:3px 10px;border-radius:99px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.badge-idle{background:rgba(148,163,184,.15);color:var(--text2)}
+.badge-running{background:rgba(99,102,241,.2);color:var(--accent2);animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* Tab navigation */
+.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:12px;padding:4px;margin-bottom:20px}
+.tab{padding:10px 24px;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;
+  transition:all .25s;color:var(--text2);border:none;background:none;font-family:inherit}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 12px rgba(99,102,241,.3)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.controls{display:flex;gap:10px;align-items:center}
+.task-select{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px 14px;
+  border-radius:10px;font-size:.85rem;font-family:inherit;cursor:pointer}
+.btn{padding:10px 22px;border:none;border-radius:12px;font-weight:600;font-size:.85rem;cursor:pointer;
+  transition:all .2s;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;box-shadow:0 4px 20px rgba(99,102,241,.3)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(99,102,241,.45)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent2)}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:20px}
+@media(max-width:1100px){.grid-3{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}
+
+.card{background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--border);
+  border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:border-color .3s}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s}
+.card:hover::before{opacity:1}
+
+.metric-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text2);font-weight:600;margin-bottom:6px}
+.metric-value{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,#fff 30%,var(--text2));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.metric-sub{font-size:.75rem;color:var(--text2);margin-top:4px}
+
+.reward-bar{height:6px;background:var(--bg);border-radius:99px;overflow:hidden;margin-top:8px}
+.reward-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.fill-green{background:linear-gradient(90deg,var(--green),#34d399)}
+.fill-amber{background:linear-gradient(90deg,var(--amber),#fbbf24)}
+.fill-red{background:linear-gradient(90deg,var(--red),#f87171)}
+
+.col-left{display:flex;flex-direction:column;gap:20px;max-height:calc(100vh - 240px);overflow-y:auto}
+.col-left::-webkit-scrollbar{width:4px}
+.col-left::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.col-right{display:flex;flex-direction:column;gap:20px;max-height:calc(100vh - 240px);overflow-y:auto}
+.col-right::-webkit-scrollbar{width:4px}
+.col-right::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+.paper-title{font-size:1.15rem;font-weight:700;line-height:1.4;margin-bottom:8px}
+.paper-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.paper-meta span{font-size:.78rem;color:var(--text2);display:flex;align-items:center;gap:4px}
+.section-label{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent2);
+  font-weight:700;margin:14px 0 6px}
+.section-text{font-size:.85rem;line-height:1.65;color:#cbd5e1}
+
+.flaw-item{padding:10px 14px;background:rgba(239,68,68,.06);border-left:3px solid var(--red);
+  border-radius:0 8px 8px 0;margin-bottom:8px;font-size:.83rem;line-height:1.5}
+.flaw-item.matched{border-left-color:var(--green);background:rgba(16,185,129,.06)}
+.strength-item{padding:10px 14px;background:rgba(16,185,129,.06);border-left:3px solid var(--green);
+  border-radius:0 8px 8px 0;margin-bottom:8px;font-size:.83rem;line-height:1.5}
+.weakness-item{padding:10px 14px;background:rgba(245,158,11,.06);border-left:3px solid var(--amber);
+  border-radius:0 8px 8px 0;margin-bottom:8px;font-size:.83rem;line-height:1.5}
+
+.action-card{border:1px solid var(--border);border-radius:12px;padding:18px;background:rgba(0,0,0,.2)}
+.action-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;
+  padding-bottom:12px;border-bottom:1px solid var(--border)}
+.pill{padding:4px 14px;border-radius:99px;font-weight:700;font-size:.78rem;text-transform:uppercase}
+.pill-accept{background:rgba(16,185,129,.12);color:var(--green)}
+.pill-reject{background:rgba(239,68,68,.12);color:var(--red)}
+.pill-revision{background:rgba(245,158,11,.12);color:var(--amber)}
+
+.feed{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 0}
+.feed::-webkit-scrollbar{width:4px}
+.feed::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.feed-item{padding:8px 12px;border-radius:8px;background:rgba(255,255,255,.02);
+  border-left:3px solid var(--text2);font-size:.8rem;transition:all .2s;animation:slideIn .3s ease}
+.feed-item:hover{background:rgba(255,255,255,.04);transform:translateX(3px)}
+.feed-item.t-START{border-left-color:var(--accent2)}
+.feed-item.t-STEP{border-left-color:var(--amber)}
+.feed-item.t-END{border-left-color:var(--green)}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+
+.reward-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.reward-cell{padding:8px 10px;background:rgba(255,255,255,.02);border-radius:8px;font-size:.8rem}
+.reward-cell .label{color:var(--text2);font-size:.7rem;font-weight:600}
+.reward-cell .val{font-size:1.1rem;font-weight:700;margin-top:2px}
+
+.history-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.history-table th{text-align:left;padding:6px 10px;color:var(--text2);font-weight:600;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.history-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03)}
+.history-table tr:hover td{background:rgba(255,255,255,.02)}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:200px;color:var(--text2);gap:12px}
+.empty-state svg{opacity:.2}
+
+.curriculum-indicator{display:flex;gap:4px;align-items:center}
+.curr-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.curr-dot.active{background:var(--accent2);box-shadow:0 0 8px var(--accent)}
+
+canvas{width:100% !important;height:180px !important}
+
+/* ===== UPLOAD ZONE ===== */
+.upload-zone{border:2px dashed var(--border);border-radius:16px;padding:48px 32px;text-align:center;
+  transition:all .3s;cursor:pointer;position:relative;background:rgba(0,0,0,.15)}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(99,102,241,.04)}
+.upload-zone.dragover{box-shadow:0 0 40px rgba(99,102,241,.15) inset}
+.upload-zone input{display:none}
+.upload-icon{width:64px;height:64px;margin:0 auto 16px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(124,58,237,.1));
+  display:flex;align-items:center;justify-content:center}
+.upload-title{font-size:1.1rem;font-weight:700;margin-bottom:6px}
+.upload-sub{font-size:.82rem;color:var(--text2);margin-bottom:16px}
+.upload-or{font-size:.75rem;color:var(--text2);margin:12px 0}
+.paste-area{width:100%;min-height:120px;max-height:240px;overflow-y:auto;padding:14px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);
+  font-family:inherit;font-size:.82rem;line-height:1.6;resize:vertical}
+.paste-area::placeholder{color:rgba(148,163,184,.5)}
+
+.upload-progress{margin-top:20px;display:none}
+.progress-bar{height:6px;background:var(--bg);border-radius:99px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:99px;transition:width .4s ease}
+.progress-text{font-size:.78rem;color:var(--text2)}
+
+/* Review result cards */
+.review-result{display:none;margin-top:20px}
+.review-result.visible{display:block}
+.review-summary{padding:16px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);
+  border-radius:12px;margin-bottom:16px;font-size:.88rem;line-height:1.6}
+
+.review-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.review-stat{text-align:center;padding:14px;background:rgba(0,0,0,.2);border-radius:12px;
+  border:1px solid var(--border)}
+.review-stat .stat-value{font-size:1.6rem;font-weight:800;margin-bottom:2px}
+.review-stat .stat-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);font-weight:600}
+
+.file-info{display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.15);
+  border-radius:10px;margin-bottom:16px;font-size:.85rem}
+.file-info svg{flex-shrink:0}
+.file-info .file-name{font-weight:600;color:var(--green)}
+.file-info .file-meta{font-size:.75rem;color:var(--text2)}
+</style>
+</head>
+<body>
+<div class="mesh"></div>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent2)"><path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/><circle cx="12" cy="15" r="2"/></svg>
+      <span>PeerReview</span>RL Dashboard
+      <span id="statusBadge" class="badge badge-idle">Idle</span>
+    </h1>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('upload')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload & Review
+    </button>
+    <button class="tab" onclick="switchTab('rl')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      RL Training
+    </button>
+  </div>
+
+  <!-- ============== TAB 1: UPLOAD & REVIEW ============== -->
+  <div id="tabUpload" class="tab-content active">
+    <div class="grid">
+      <!-- Left: Upload + Paper Sections -->
+      <div class="col-left">
+        <div class="card">
+          <div class="section-label" style="margin-top:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload Research Paper
+          </div>
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('pdfInput').click()">
+            <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileSelect(event)">
+            <div class="upload-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+            </div>
+            <div class="upload-title">Drop your PDF here</div>
+            <div class="upload-sub">or click to browse • PDF files up to 20MB</div>
+          </div>
+
+          <div class="upload-or">— or paste paper text directly —</div>
+          <textarea class="paste-area" id="pasteArea" placeholder="Paste the full text of the research paper here (title, abstract, methodology, results, conclusions, citations)..."></textarea>
+          <div style="margin-top:12px;display:flex;gap:10px">
+            <button class="btn btn-primary" id="reviewPasteBtn" onclick="reviewPastedText()" style="flex:1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Review Pasted Text
+            </button>
+            <button class="btn btn-outline" onclick="clearUpload()">Clear</button>
+          </div>
+
+          <div class="upload-progress" id="uploadProgress">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-text" id="progressText">Uploading...</div>
+          </div>
+        </div>
+
+        <!-- Extracted Paper Preview -->
+        <div class="card" id="uploadedPaperCard" style="display:none">
+          <div id="uploadedFileInfo"></div>
+          <div id="uploadedPaperContent"></div>
+        </div>
+      </div>
+
+      <!-- Right: Review Results -->
+      <div class="col-right">
+        <div class="card" id="reviewResultCard">
+          <div id="reviewContent">
+            <div class="empty-state">
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <p style="font-size:.95rem">Upload a PDF or paste text to get an <strong>AI peer review</strong></p>
+              <p style="font-size:.78rem;max-width:340px">The agent will analyze methodology, detect flaws (p-hacking, fabricated citations, impossible statistics), and provide a recommendation</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== TAB 2: RL TRAINING ============== -->
+  <div id="tabRl" class="tab-content">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px">
+      <select id="taskSelect" class="task-select">
+        <option value="all">All Tasks</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <button id="startBtn" class="btn btn-primary" onclick="startExecution()">▶ Start Agent</button>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="grid-3">
+      <div class="card">
+        <div class="metric-label">Easy Reward</div>
+        <div class="metric-value" id="metricEasy">—</div>
+        <div class="reward-bar"><div id="barEasy" class="reward-fill fill-green" style="width:0%"></div></div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Medium Reward</div>
+        <div class="metric-value" id="metricMedium">—</div>
+        <div class="reward-bar"><div id="barMedium" class="reward-fill fill-amber" style="width:0%"></div></div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Hard Reward</div>
+        <div class="metric-value" id="metricHard">—</div>
+        <div class="reward-bar"><div id="barHard" class="reward-fill fill-red" style="width:0%"></div></div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Average</div>
+        <div class="metric-value" id="metricAvg">—</div>
+        <div class="metric-sub">Across all tasks</div>
+      </div>
+      <div class="card">
+        <div class="metric-label">Curriculum</div>
+        <div class="metric-value" id="metricCurr">1.0</div>
+        <div class="curriculum-indicator" id="currDots">
+          <div class="curr-dot active"></div><div class="curr-dot"></div><div class="curr-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="col-left">
+        <div class="card" id="paperCard">
+          <div id="paperContent">
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/></svg>
+              <p>Click <strong>Start Agent</strong> to begin reviewing papers</p>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="actionCard" style="display:none">
+          <div class="section-label">Agent Determination</div>
+          <div class="action-card">
+            <div class="action-header">
+              <span style="font-weight:600">Recommendation</span>
+              <span id="recPill" class="pill pill-reject">—</span>
+            </div>
+            <div id="confidenceRow" style="display:flex;justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:.82rem;color:var(--text2)">Confidence</span>
+              <span id="confValue" style="font-weight:700">—</span>
+            </div>
+            <div class="section-label" style="margin-top:0">Reasoning</div>
+            <div id="reasoningText" class="section-text" style="font-style:italic">—</div>
+            <div id="flawsSection" style="display:none">
+              <div class="section-label" style="color:var(--red)">⚠ Identified Flaws</div>
+              <div id="flawsList"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="rewardCard" style="display:none">
+          <div class="section-label">Reward Breakdown</div>
+          <div class="reward-grid">
+            <div class="reward-cell"><div class="label">R_flaw (recall)</div><div class="val" id="rwFlaw">—</div></div>
+            <div class="reward-cell"><div class="label">A_rec (accuracy)</div><div class="val" id="rwRec">—</div></div>
+            <div class="reward-cell"><div class="label">B_crit (bonus)</div><div class="val" id="rwCrit">—</div></div>
+            <div class="reward-cell"><div class="label">P_FP (penalty)</div><div class="val" id="rwFP">—</div></div>
+            <div class="reward-cell"><div class="label">Gate (Γ)</div><div class="val" id="rwGate">—</div></div>
+            <div class="reward-cell" style="border:1px solid var(--accent);border-radius:8px"><div class="label">R_total</div><div class="val" id="rwTotal" style="color:var(--accent2)">—</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-right">
+        <div class="card">
+          <div class="section-label" style="margin-top:0">
+            <span style="display:flex;align-items:center;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Execution Feed
+            </span>
+          </div>
+          <div class="feed" id="feedList">
+            <div class="feed-item" style="color:var(--text2)">Waiting for execution...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label" style="margin-top:0">Episode History</div>
+          <div style="overflow-x:auto">
+            <table class="history-table">
+              <thead><tr><th>#</th><th>Task</th><th>Paper</th><th>Recommendation</th><th>Reward</th></tr></thead>
+              <tbody id="historyBody">
+                <tr><td colspan="5" style="text-align:center;color:var(--text2);padding:20px">No episodes yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label" style="margin-top:0">Rolling Reward Chart</div>
+          <canvas id="rewardChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===================================================================
+// TAB SWITCHING
+// ===================================================================
+function switchTab(tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  if (tabId === 'upload') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('tabUpload').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('tabRl').classList.add('active');
+  }
+}
+
+// ===================================================================
+// UPLOAD & REVIEW (TAB 1)
+// ===================================================================
+
+// Drag & drop handlers
+const uploadZone = document.getElementById('uploadZone');
+['dragenter','dragover'].forEach(e => {
+  uploadZone.addEventListener(e, ev => { ev.preventDefault(); uploadZone.classList.add('dragover'); });
+});
+['dragleave','drop'].forEach(e => {
+  uploadZone.addEventListener(e, ev => { ev.preventDefault(); uploadZone.classList.remove('dragover'); });
+});
+uploadZone.addEventListener('drop', ev => {
+  const files = ev.dataTransfer.files;
+  if (files.length > 0 && files[0].name.toLowerCase().endsWith('.pdf')) {
+    uploadPDF(files[0]);
+  }
+});
+
+function handleFileSelect(ev) {
+  const file = ev.target.files[0];
+  if (file) uploadPDF(file);
+}
+
+function showProgress(text, pct) {
+  const el = document.getElementById('uploadProgress');
+  el.style.display = '';
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = text;
+}
+
+function hideProgress() {
+  document.getElementById('uploadProgress').style.display = 'none';
+}
+
+function clearUpload() {
+  document.getElementById('pasteArea').value = '';
+  document.getElementById('pdfInput').value = '';
+  document.getElementById('uploadedPaperCard').style.display = 'none';
+  document.getElementById('reviewContent').innerHTML = `
+    <div class="empty-state">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      <p style="font-size:.95rem">Upload a PDF or paste text to get an <strong>AI peer review</strong></p>
+    </div>`;
+  hideProgress();
+}
+
+async function uploadPDF(file) {
+  document.getElementById('statusBadge').textContent = 'Reviewing';
+  document.getElementById('statusBadge').className = 'badge badge-running';
+  showProgress('Uploading PDF...', 20);
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    showProgress('Extracting text & calling LLM...', 50);
+    const resp = await fetch('/api/review-paper', { method: 'POST', body: formData });
+    showProgress('Processing review...', 80);
+    const data = await resp.json();
+
+    if (data.status === 'error') {
+      showProgress('❌ ' + data.error, 100);
+      setTimeout(hideProgress, 4000);
+    } else {
+      showProgress('✅ Review complete!', 100);
+      setTimeout(hideProgress, 1500);
+      renderUploadedPaper(data);
+      renderReviewResult(data);
+    }
+  } catch (err) {
+    showProgress('❌ Network error: ' + err.message, 100);
+    setTimeout(hideProgress, 4000);
+  }
+  document.getElementById('statusBadge').textContent = 'Idle';
+  document.getElementById('statusBadge').className = 'badge badge-idle';
+}
+
+async function reviewPastedText() {
+  const text = document.getElementById('pasteArea').value.trim();
+  if (text.length < 50) { alert('Please paste at least 50 characters of paper text.'); return; }
+
+  document.getElementById('statusBadge').textContent = 'Reviewing';
+  document.getElementById('statusBadge').className = 'badge badge-running';
+  document.getElementById('reviewPasteBtn').disabled = true;
+  document.getElementById('reviewPasteBtn').textContent = '⏳ Reviewing...';
+  showProgress('Analyzing text...', 40);
+
+  try {
+    showProgress('Calling LLM for review...', 60);
+    const resp = await fetch('/api/review-text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    showProgress('Processing review...', 85);
+    const data = await resp.json();
+
+    if (data.status === 'error') {
+      showProgress('❌ ' + data.error, 100);
+      setTimeout(hideProgress, 4000);
+    } else {
+      showProgress('✅ Review complete!', 100);
+      setTimeout(hideProgress, 1500);
+      renderUploadedPaper(data);
+      renderReviewResult(data);
+    }
+  } catch (err) {
+    showProgress('❌ ' + err.message, 100);
+    setTimeout(hideProgress, 4000);
+  }
+  document.getElementById('statusBadge').textContent = 'Idle';
+  document.getElementById('statusBadge').className = 'badge badge-idle';
+  document.getElementById('reviewPasteBtn').disabled = false;
+  document.getElementById('reviewPasteBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Review Pasted Text';
+}
+
+function renderUploadedPaper(data) {
+  const card = document.getElementById('uploadedPaperCard');
+  card.style.display = '';
+  const p = data.paper || {};
+
+  document.getElementById('uploadedFileInfo').innerHTML = `
+    <div class="file-info">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <div>
+        <div class="file-name">${data.filename || 'paper.pdf'}</div>
+        <div class="file-meta">${p.text_length ? Math.round(p.text_length/1000) + 'K chars' : ''} ${p.pages ? '• ~' + p.pages + ' pages' : ''}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('uploadedPaperContent').innerHTML = `
+    <div class="paper-title">${p.title || 'Untitled Paper'}</div>
+    ${p.abstract ? '<div class="section-label">Abstract</div><div class="section-text">' + escHtml(p.abstract) + '</div>' : ''}
+    ${p.methodology ? '<div class="section-label">Methodology</div><div class="section-text">' + escHtml(p.methodology) + '</div>' : ''}
+    ${p.results ? '<div class="section-label">Results</div><div class="section-text" style="font-family:monospace;font-size:.8rem;white-space:pre-wrap">' + escHtml(p.results) + '</div>' : ''}
+    ${p.conclusions ? '<div class="section-label">Conclusions</div><div class="section-text">' + escHtml(p.conclusions) + '</div>' : ''}
+  `;
+}
+
+function renderReviewResult(data) {
+  const r = data.review || {};
+  const rec = r.recommendation || 'major_revision';
+  const el = document.getElementById('reviewContent');
+
+  const flawsHtml = (r.identified_flaws || []).map(f =>
+    `<div class="flaw-item">⚠ ${escHtml(f)}</div>`
+  ).join('') || '<div style="color:var(--text2);font-size:.82rem;padding:8px 0">No flaws detected</div>';
+
+  const strengthsHtml = (r.strengths || []).map(s =>
+    `<div class="strength-item">✓ ${escHtml(s)}</div>`
+  ).join('') || '';
+
+  const weaknessesHtml = (r.weaknesses || []).map(w =>
+    `<div class="weakness-item">⚡ ${escHtml(w)}</div>`
+  ).join('') || '';
+
+  el.innerHTML = `
+    <div class="review-stats">
+      <div class="review-stat">
+        <div class="stat-value"><span class="pill ${getPillClass(rec)}" style="font-size:.9rem;padding:6px 18px">${rec.toUpperCase().replace('_',' ')}</span></div>
+        <div class="stat-label" style="margin-top:8px">Recommendation</div>
+      </div>
+      <div class="review-stat">
+        <div class="stat-value" style="color:var(--accent2)">${((r.confidence || 0) * 100).toFixed(0)}%</div>
+        <div class="stat-label">Confidence</div>
+      </div>
+      <div class="review-stat">
+        <div class="stat-value" style="color:${(r.identified_flaws||[]).length > 0 ? 'var(--red)':'var(--green)'}">${(r.identified_flaws||[]).length}</div>
+        <div class="stat-label">Flaws Found</div>
+      </div>
+    </div>
+
+    ${r.summary ? '<div class="review-summary">📝 ' + escHtml(r.summary) + '</div>' : ''}
+
+    <div class="section-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" style="vertical-align:-2px;margin-right:4px"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Reasoning
+    </div>
+    <div class="section-text" style="margin-bottom:16px">${escHtml(r.reasoning || '—')}</div>
+
+    <div class="section-label" style="color:var(--red)">⚠ Identified Flaws (${(r.identified_flaws||[]).length})</div>
+    ${flawsHtml}
+
+    ${strengthsHtml ? '<div class="section-label" style="color:var(--green)">✓ Strengths</div>' + strengthsHtml : ''}
+    ${weaknessesHtml ? '<div class="section-label" style="color:var(--amber)">⚡ Weaknesses</div>' + weaknessesHtml : ''}
+  `;
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+
+// ===================================================================
+// RL TRAINING (TAB 2) — existing code
+// ===================================================================
+let isRunning = false;
+let episodes = [];
+let chartData = [];
+
+const WS_URL = (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/ws';
+
+function getRewardColor(r) {
+  if (r >= 0.6) return 'var(--green)';
+  if (r >= 0.3) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function getPillClass(rec) {
+  if (rec === 'accept') return 'pill-accept';
+  if (rec === 'reject') return 'pill-reject';
+  return 'pill-revision';
+}
+
+function addFeedItem(type, text) {
+  const feed = document.getElementById('feedList');
+  if (feed.children.length === 1 && feed.children[0].textContent.includes('Waiting')) {
+    feed.innerHTML = '';
+  }
+  const div = document.createElement('div');
+  div.className = `feed-item t-${type}`;
+  div.textContent = text;
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function renderPaper(paper) {
+  const c = document.getElementById('paperContent');
+  c.innerHTML = `
+    <div class="paper-title">${paper.title || 'Unknown'}</div>
+    <div class="paper-meta"><span>📄 ${paper.paper_id || ''}</span></div>
+    <div class="section-label">Abstract</div>
+    <div class="section-text">${paper.abstract || ''}</div>
+    <div class="section-label">Methodology</div>
+    <div class="section-text">${paper.methodology || ''}</div>
+    <div class="section-label">Results</div>
+    <div class="section-text" style="font-family:monospace;font-size:.8rem;white-space:pre-wrap">${paper.results || ''}</div>
+    <div class="section-label">Conclusions</div>
+    <div class="section-text">${paper.conclusions || ''}</div>
+    <div class="section-label">Citations</div>
+    <div class="section-text">${(paper.citations || []).map(c => '• ' + c).join('<br>')}</div>
+  `;
+}
+
+function renderAction(action) {
+  document.getElementById('actionCard').style.display = '';
+  const rec = action.recommendation || 'reject';
+  const pill = document.getElementById('recPill');
+  pill.textContent = rec.toUpperCase().replace('_', ' ');
+  pill.className = 'pill ' + getPillClass(rec);
+  document.getElementById('confValue').textContent = (action.confidence || 0).toFixed(2);
+  document.getElementById('reasoningText').textContent = action.reasoning || '—';
+  const flaws = action.identified_flaws || [];
+  const sec = document.getElementById('flawsSection');
+  const list = document.getElementById('flawsList');
+  if (flaws.length > 0) {
+    sec.style.display = '';
+    list.innerHTML = flaws.map(f => `<div class="flaw-item">${f}</div>`).join('');
+  } else { sec.style.display = 'none'; }
+}
+
+function renderRewardBreakdown(info) {
+  document.getElementById('rewardCard').style.display = '';
+  document.getElementById('rwFlaw').textContent = (info.r_flaw ?? 0).toFixed(3);
+  document.getElementById('rwRec').textContent = (info.a_rec ?? 0).toFixed(3);
+  document.getElementById('rwCrit').textContent = (info.b_crit ?? 0).toFixed(3);
+  document.getElementById('rwFP').textContent = (info.p_fp ?? 0).toFixed(3);
+  document.getElementById('rwGate').textContent = info.gate == 1 ? 'OPEN ✓' : 'CLOSED ✗';
+  document.getElementById('rwGate').style.color = info.gate == 1 ? 'var(--green)' : 'var(--red)';
+}
+
+function updateMetrics(task, reward) {
+  const el = document.getElementById('metric' + task.charAt(0).toUpperCase() + task.slice(1));
+  if (el) el.textContent = reward.toFixed(3);
+  const bar = document.getElementById('bar' + task.charAt(0).toUpperCase() + task.slice(1));
+  if (bar) bar.style.width = (reward * 100) + '%';
+  const vals = ['Easy','Medium','Hard'].map(t => {
+    const v = document.getElementById('metric'+t).textContent;
+    return v === '—' ? null : parseFloat(v);
+  }).filter(v => v !== null);
+  if (vals.length > 0) {
+    document.getElementById('metricAvg').textContent = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(3);
+  }
+}
+
+function addHistoryRow(ep) {
+  const tbody = document.getElementById('historyBody');
+  if (tbody.children.length === 1 && tbody.children[0].querySelector('td[colspan]')) tbody.innerHTML = '';
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${episodes.length}</td>
+    <td><span class="badge" style="background:rgba(99,102,241,.15);color:var(--accent2)">${ep.task}</span></td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ep.paper_title || ep.paper_id || '—'}</td>
+    <td><span class="pill ${getPillClass(ep.rec)}">${(ep.rec || '—').toUpperCase()}</span></td>
+    <td style="font-weight:700;color:${getRewardColor(ep.reward)}">${ep.reward.toFixed(3)}</td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function drawChart() {
+  const canvas = document.getElementById('rewardChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+  if (chartData.length < 2) return;
+  const pad = {t:10,r:10,b:24,l:36};
+  const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
+  ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ph * (1 - i/4);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.font = '10px Inter'; ctx.textAlign = 'right';
+    ctx.fillText((i * 0.25).toFixed(2), pad.l - 4, y + 3);
+  }
+  ctx.beginPath();
+  chartData.forEach((v, i) => {
+    const x = pad.l + (i / (chartData.length - 1)) * pw;
+    const y = pad.t + ph * (1 - Math.min(1, Math.max(0, v)));
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#6366f1'; ctx.lineWidth = 2; ctx.stroke();
+  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ph);
+  grad.addColorStop(0, 'rgba(99,102,241,.2)'); grad.addColorStop(1, 'rgba(99,102,241,0)');
+  ctx.lineTo(pad.l + pw, pad.t + ph); ctx.lineTo(pad.l, pad.t + ph);
+  ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+  chartData.forEach((v, i) => {
+    const x = pad.l + (i / (chartData.length - 1)) * pw;
+    const y = pad.t + ph * (1 - Math.min(1, Math.max(0, v)));
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fillStyle = '#818cf8'; ctx.fill();
+  });
+}
+
+async function startExecution() {
+  if (isRunning) return;
+  isRunning = true;
+  const btn = document.getElementById('startBtn');
+  btn.disabled = true; btn.textContent = '⏳ Running...';
+  document.getElementById('statusBadge').textContent = 'Running';
+  document.getElementById('statusBadge').className = 'badge badge-running';
+  const taskSel = document.getElementById('taskSelect').value;
+  const tasks = taskSel === 'all' ? ['easy','medium','hard'] : [taskSel];
+  for (const task of tasks) {
+    try { await runOneEpisode(task); }
+    catch (err) { addFeedItem('END', `❌ Task ${task} failed: ${err.message}`); }
+  }
+  isRunning = false; btn.disabled = false; btn.textContent = '▶ Start Agent';
+  document.getElementById('statusBadge').textContent = 'Idle';
+  document.getElementById('statusBadge').className = 'badge badge-idle';
+}
+
+function runOneEpisode(task) {
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(WS_URL);
+    let currentPaper = null;
+    let phase = 'reset';
+    ws.onopen = () => {
+      addFeedItem('START', `🔄 Connecting for task: ${task}`);
+      ws.send(JSON.stringify({ type: 'reset', data: { task_name: task } }));
+    };
+    ws.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        if (msg.type === 'error') {
+          addFeedItem('END', `❌ Server error: ${msg.data?.message || 'Unknown'}`);
+          ws.close(); reject(new Error(msg.data?.message || 'Server error')); return;
+        }
+        if (msg.type === 'observation') {
+          const payload = msg.data || {};
+          const obs = payload.observation || {};
+          const reward = payload.reward;
+          if (phase === 'reset') {
+            currentPaper = obs.paper || {};
+            renderPaper(currentPaper);
+            addFeedItem('START', `📄 Reviewing: ${currentPaper.title || 'Unknown'}`);
+            const action = { recommendation:'reject', identified_flaws:[], confidence:0.5, reasoning:'Dashboard baseline: conservative reject.' };
+            renderAction(action);
+            phase = 'step';
+            ws.send(JSON.stringify({ type:'step', data:action }));
+          } else if (phase === 'step') {
+            const r = reward ?? 0;
+            const meta = obs.metadata || {};
+            renderRewardBreakdown(meta);
+            document.getElementById('rwTotal').textContent = r.toFixed(3);
+            updateMetrics(task, r);
+            const ep = { task, paper_id:currentPaper?.paper_id, paper_title:currentPaper?.title, rec:'reject', reward:r };
+            episodes.push(ep); chartData.push(r); addHistoryRow(ep); drawChart();
+            addFeedItem('END', `✅ ${task.toUpperCase()} → Reward: ${r.toFixed(3)}`);
+            ws.send(JSON.stringify({ type:'close' })); ws.close(); resolve();
+          }
+        }
+      } catch (e) { addFeedItem('END', `❌ Parse error: ${e.message}`); ws.close(); reject(e); }
+    };
+    ws.onerror = () => { addFeedItem('END', '❌ WebSocket error'); reject(new Error('WebSocket connection failed')); };
+    ws.onclose = () => {};
+  });
+}
+
+window.addEventListener('resize', drawChart);
+</script>
+</body>
+</html>
