@@ -8,15 +8,21 @@ version = "0.1.0"
 description = "OpenEnv environment for automated scientific peer review via RLVR"
 requires-python = ">=3.10"
 dependencies = [
-    "openenv-core>=0.3.0",
-    "fastapi>=0.110.0",
-    "uvicorn[standard]>=0.29.0",
-    "pydantic>=2.0.0",
-    "sentence-transformers>=2.7.0",
-    "scipy>=1.12.0",
-    "numpy>=1.26.0",
-    "torch>=2.0.0",
+    "openenv-core",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "scipy",
+    "numpy",
+    "openai",
+    "PyPDF2",
+    "python-multipart",
+    "huggingface_hub",
+    "requests",
 ]
 
+[project.scripts]
+server = "server.app:main"
+
 [tool.setuptools.packages.find]
-where = ["envs"]
+where = ["."]

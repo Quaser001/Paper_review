@@ -1,5 +1,0 @@
-Job failed with exit code: 1. Reason: cache miss: [5/5] COPY . .
-cache miss: [2/5] WORKDIR /app
-cache miss: [4/5] RUN pip install --no-cache-dir     -r requirements.txt     torch --index-url https://download.pytorch.org/whl/cpu     sentence-transformers
-cache miss: [3/5] COPY requirements.txt .
-{"total":10,"completed":9,"user_total":5,"user_cached":0,"user_completed":4,"user_cacheable":4,"from":1,"miss":4,"client_duration_ms":3758}
